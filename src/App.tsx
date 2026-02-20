@@ -1,5 +1,5 @@
 import { useState, useId, useRef, useEffect } from "react";
-import { Avatar } from "./avatar/Avatar";
+import { generateAvatar } from "avatario";
 
 const DEFAULT_SEED = "avatar-gen";
 
@@ -87,7 +87,7 @@ export default function App() {
           Avatar<span className="text-violet-400">.</span>gen
         </h1>
         <p className="mt-2 text-sm text-slate-400 tracking-wide uppercase">
-          Unique cartoon avatars from any string
+          Unique avatars from any string
         </p>
       </div>
 
@@ -111,9 +111,8 @@ export default function App() {
               ref={avatarRef}
               className="rounded-full overflow-hidden transition-[filter] duration-300 group-hover:blur-[3px]"
               style={{ lineHeight: 0 }}
-            >
-              <Avatar seed={seed} size={220} />
-            </div>
+              dangerouslySetInnerHTML={{ __html: generateAvatar(seed, 220) }}
+            />
           </div>
 
           {/* Download overlay — fades in on hover */}
