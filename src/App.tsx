@@ -1,4 +1,4 @@
-import { useState, useId } from 'react';
+import { useState, useId, useRef, useEffect } from 'react';
 import { Avatar } from './avatar/Avatar';
 
 const DEFAULT_SEED = 'avatar-gen';
@@ -6,6 +6,38 @@ const DEFAULT_SEED = 'avatar-gen';
 export default function App() {
   const [seed, setSeed] = useState(DEFAULT_SEED);
   const inputId = useId();
+  const avatarRef = useRef<HTMLDivElement>(null);
+  const [downloadUrl, setDownloadUrl] = useState('');
+  const prevUrlRef = useRef('');
+
+  useEffect(() => {
+    if (prevUrlRef.current) URL.revokeObjectURL(prevUrlRef.current);
+
+    const svgEl = avatarRef.current?.querySelector('svg');
+    if (!svgEl) return;
+
+    const serializer = new XMLSerializer();
+    const svgStr = serializer.serializeToString(svgEl);
+    const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 440;
+      canvas.height = 440;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, 440, 440);
+      URL.revokeObjectURL(svgUrl);
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        prevUrlRef.current = url;
+        setDownloadUrl(url);
+      }, 'image/png');
+    };
+    img.src = svgUrl;
+  }, [seed]);
 
   function randomise() {
     const words = ['cosmic', 'pixel', 'neon', 'solar', 'jade', 'nova', 'flux', 'zephyr', 'echo', 'prism'];
@@ -30,6 +62,7 @@ export default function App() {
 
         {/* Avatar display */}
         <div
+          ref={avatarRef}
           className="relative"
           style={{ filter: 'drop-shadow(0 8px 32px rgba(139,92,246,0.35))' }}
         >
@@ -81,6 +114,17 @@ export default function App() {
         >
           Randomise
         </button>
+
+        {/* Download */}
+        <a
+          href={downloadUrl || undefined}
+          download={`avatar-${seed || 'download'}.png`}
+          className="w-full rounded-xl py-3 text-sm font-bold tracking-wide text-center block
+                     bg-slate-700 hover:bg-slate-600 active:bg-slate-800
+                     text-white transition-colors duration-150 cursor-pointer"
+        >
+          Download PNG
+        </a>
 
       </div>
 
