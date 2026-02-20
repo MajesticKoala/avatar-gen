@@ -36,7 +36,7 @@ export default function App() {
           <div
             className="rounded-full p-1"
             style={{
-              background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 50%, #0ea5e9 100%)',
+              background: '#0057B8',
             }}
           >
             <div className="rounded-full overflow-hidden" style={{ lineHeight: 0 }}>

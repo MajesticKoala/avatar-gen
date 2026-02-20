@@ -2,14 +2,7 @@
 // Edit these arrays to change the colour options across all avatars.
 
 export const BACKGROUNDS: string[] = [
-  '#FFE566', // yellow
-  '#66D9E8', // cyan
-  '#FF8FAB', // pink
-  '#A8E6CF', // mint
-  '#FFB347', // orange
-  '#C3B1E1', // lavender
-  '#87CEEB', // sky blue
-  '#F4A460', // sandy
+  '#0057B8', // solid blue
 ];
 
 export const SKIN_TONES: string[] = [
