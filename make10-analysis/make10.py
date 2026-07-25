@@ -11,10 +11,15 @@ Game rules (as configured here):
   * Real division is allowed (fractions may appear in intermediate steps).
   * Goal: reach exactly 10.
 
+Add --pow to any command to also allow exponentiation (a^b, e.g. 2^3=8,
+squares, cubes). Integer exponents only (raising to a power, not roots), and
+0^0 is treated as 1 by default (pass --no00 to treat it as undefined).
+
 Usage:
-  python3 make10.py 2 3 4 5      # solve one set, print an expression
-  python3 make10.py --stats      # aggregate counts over all inputs
-  python3 make10.py --impossible # list every impossible digit-set
+  python3 make10.py 2 3 4 5           # solve one set, print an expression
+  python3 make10.py --stats           # aggregate counts over all inputs
+  python3 make10.py --impossible      # list every impossible digit-set
+  python3 make10.py 2 5 7 --pow       # ...any of the above, with ^ allowed
 """
 import sys
 from fractions import Fraction
@@ -22,6 +27,15 @@ from itertools import product, permutations, combinations_with_replacement
 
 OPS = ['+', '-', '*', '/']
 TARGET = Fraction(10)
+
+# Toggled by the --pow / --no00 flags (see main).
+ALLOW_POW = False
+ZERO_POW_ZERO_IS_ONE = True
+EXP_CAP = 64  # skip |exponent| > this: can't help reach 10 with small digits
+
+
+def active_ops():
+    return OPS + ['^'] if ALLOW_POW else OPS
 
 
 def apply(a, b, op):
@@ -33,6 +47,19 @@ def apply(a, b, op):
         return a * b
     if op == '/':
         return None if b == 0 else a / b
+    if op == '^':
+        if b.denominator != 1:        # integer exponents only (no roots)
+            return None
+        e = b.numerator
+        if abs(e) > EXP_CAP:          # runaway tower guard
+            return None
+        if a == 0:
+            if e < 0:
+                return None           # 1 / 0
+            if e == 0:
+                return Fraction(1) if ZERO_POW_ZERO_IS_ONE else None
+            return Fraction(0)
+        return a ** e
 
 
 # The 5 parenthesizations of four operands (Catalan number C_3 = 5).
@@ -93,7 +120,7 @@ def solve(digits):
     """Return a solution string reaching 10, or None if impossible."""
     for perm in set(permutations(digits)):
         nums = [Fraction(x) for x in perm]
-        for ops in product(OPS, repeat=3):
+        for ops in product(active_ops(), repeat=3):
             for val, expr in shapes(nums, ops):
                 if val == TARGET:
                     return expr
@@ -142,6 +169,13 @@ def list_impossible():
 
 
 def main(argv):
+    global ALLOW_POW, ZERO_POW_ZERO_IS_ONE
+    if '--pow' in argv:
+        ALLOW_POW = True
+        argv = [a for a in argv if a != '--pow']
+    if '--no00' in argv:
+        ZERO_POW_ZERO_IS_ONE = False
+        argv = [a for a in argv if a != '--no00']
     if len(argv) == 0 or argv[0] in ('-h', '--help'):
         print(__doc__)
         return

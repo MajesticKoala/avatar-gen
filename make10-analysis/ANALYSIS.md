@@ -14,6 +14,10 @@ to reach exactly **10**.
 - No unary minus (you can't negate a lone digit; subtraction between terms
   is of course fine).
 
+The base analysis uses `+ − × ÷` only. A later section,
+[Adding exponentiation](#adding-exponentiation-powers), extends this with a
+power operator `a^b` and recounts.
+
 The counts below come from an **exhaustive** search over every permutation
 of the digits, all 5 ways to parenthesize four operands, and all `4³` operator
 choices, using exact rational arithmetic (`fractions.Fraction`) — so there is
@@ -118,6 +122,66 @@ order; e.g. `2257` means the multiset {2, 2, 5, 7}):
 
 ---
 
+## Adding exponentiation (powers)
+
+What if we also allow a **power** operator `a^b` (e.g. `2^3 = 8`, squaring,
+cubing) as a fifth operation between numbers?
+
+Rules for the power operator used here:
+
+- `a^b` uses two of the numbers (or sub-results), just like the other ops.
+- **Integer exponents only** — this is raising to a power, *not* taking
+  roots. So `4^2 = 16` is allowed but `4^(1/2) = 2` is not.
+- Negative bases with integer exponents are fine: `(8−9)^8 = (−1)^8 = 1`.
+- `0^0` is treated as `1` by default (Python's convention). This one is
+  genuinely debatable, so the counts below are given **both ways**.
+
+### How many of the 163 impossible sets become possible?
+
+| `0^0` convention | Sets that open up | Still impossible | New solvable total (of 715) |
+|---|---:|---:|---:|
+| `0^0 = 1` | **84** of 163 | 79 | **636** |
+| `0^0` undefined | **70** of 163 | 93 | **622** |
+
+At the four-digit-string level (out of 10,000):
+
+| `0^0` convention | Previously impossible | Become possible | Still impossible | New solvable total |
+|---|---:|---:|---:|---:|
+| `0^0 = 1` | 1,853 | **1,168** | 685 | **9,315** (93.2%) |
+| `0^0` undefined | 1,853 | **1,014** | 839 | **9,161** (91.6%) |
+
+The 14-set gap between the two conventions is entirely zero-heavy hands that
+can *only* be rescued by reading `0^0` as `1` (e.g. `0009` via `(9+0)+0^0`).
+
+### Example rescues (previously impossible → solved with `^`)
+
+| Digits | Solution |
+|---|---|
+| `1 1 2 2` | `1 + (2 + 1)^2` |
+| `8 8 9 9` | `9 + (8 − 9)^8` |
+| `3 6 6 9` | `(6 ÷ 6)^3 + 9` |
+| `1 1 5 9` | `(1^5 + 9) × 1` |
+| `0 0 2 3` | `3^2 + 0^0`  *(needs `0^0 = 1`)* |
+
+### The 79 sets that remain impossible even with powers (using `0^0 = 1`)
+
+```
+0000 0001 0002 0003 0004 0005 0006 0007 0008 0011
+0012 0013 0014 0016 0017 0022 0034 0044 0048 0057
+0058 0066 0067 0068 0077 0078 0088 0111 0112 0113
+0114 0116 0117 0122 0134 0144 0166 0167 0177 0222
+0344 0444 0448 0577 0588 0666 0667 0668 0677 0678
+0777 0778 0788 0888 1111 1112 1177 1444 1666 1667
+1677 1777 2257 3444 4444 4477 4558 5668 5788 5799
+6666 6667 6677 6777 6778 6888 7777 7788 7888
+```
+
+These are dominated by zeros and by high repeated digits (`6/7`) where even
+`x^2`/`x^3` overshoots 10 too fast to be reined back in. `2257`, `4477`,
+`4558`, `5668`, `5788`, and `5799` are the only zero-free holdouts.
+
+---
+
 ## Running the solver
 
 ```bash
@@ -129,6 +193,11 @@ python3 make10.py --stats
 
 # Print the full list of impossible digit-sets
 python3 make10.py --impossible
+
+# Add --pow to any command to also allow exponentiation (a^b)
+python3 make10.py 8 8 9 9 --pow          # -> 9 + (8 - 9)^8 = 10
+python3 make10.py --stats --pow          # counts with powers, 0^0 = 1
+python3 make10.py --stats --pow --no00   # counts with powers, 0^0 undefined
 ```
 
 No third-party dependencies — just Python 3's standard library.
